@@ -1,8 +1,9 @@
-import type { PolymarketEvent } from '../../types/polymarket'
+import type { HubEvent } from '../../types/market'
 import { MarketRow } from './MarketRow'
 import { EmptyState } from '../ui/EmptyState'
 import { Spinner } from '../ui/Spinner'
 import { RefreshCw } from 'lucide-react'
+import { useLivePrices } from '../../hooks/useMarkets'
 
 export function EventList({
   events,
@@ -13,7 +14,7 @@ export function EventList({
   isRetrying,
   emptyTitle = 'No markets found',
 }: {
-  events: PolymarketEvent[] | undefined
+  events: HubEvent[] | undefined
   isLoading: boolean
   isError?: boolean
   errorMessage?: string
@@ -21,6 +22,8 @@ export function EventList({
   isRetrying?: boolean
   emptyTitle?: string
 }) {
+  const { data: livePrices = {} } = useLivePrices(events)
+
   if (isLoading) {
     return (
       <div className="flex justify-center py-20">
@@ -34,10 +37,7 @@ export function EventList({
       <div className="space-y-4">
         <EmptyState
           title="Could not load markets"
-          description={
-            errorMessage ??
-            'Run npm run dev and ensure your network can reach polymarket.com.'
-          }
+          description={errorMessage ?? 'Check your connection and try again.'}
         />
         {onRetry && (
           <div className="flex justify-center">
@@ -60,16 +60,21 @@ export function EventList({
     return (
       <EmptyState
         title={emptyTitle}
-        description="Try another category or search term."
+        description="Try another category, source, or lower your filter thresholds."
       />
     )
   }
 
   return (
-    <div className="bg-white rounded-lg border border-border overflow-hidden shadow-sm">
+    <div className="bg-white dark:bg-neutral-900 rounded-lg border border-border overflow-hidden shadow-sm">
       {events.flatMap((event) =>
         event.markets.slice(0, 3).map((market) => (
-          <MarketRow key={market.id} event={event} market={market} />
+          <MarketRow
+            key={`${event.source}-${market.id}`}
+            event={event}
+            market={market}
+            livePrices={livePrices}
+          />
         )),
       )}
     </div>

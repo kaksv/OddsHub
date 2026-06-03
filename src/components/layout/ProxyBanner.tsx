@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { AlertTriangle, RefreshCw } from 'lucide-react'
-import { checkProxyHealth } from '../../api/polymarket'
+import { checkProxyHealth } from '../../api/markets'
 
 export function ProxyBanner() {
   const { data, isLoading, refetch, isFetching } = useQuery({
@@ -20,7 +20,7 @@ export function ProxyBanner() {
       <div className="flex items-start gap-2 flex-1">
         <AlertTriangle className="size-5 shrink-0 text-amber-600 mt-0.5" aria-hidden />
         <div>
-          <p className="font-semibold">Polymarket API proxy is not reachable</p>
+          <p className="font-semibold">API proxy is not reachable</p>
           <p className="mt-0.5 text-amber-900/90">
             {data?.error ??
               'Start the app with npm run dev (runs the proxy on port 8787).'}

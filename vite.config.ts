@@ -7,26 +7,26 @@ const PROXY_PORT = 8787
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  const proxyTarget = env.VITE_GAMMA_PROXY ?? `http://127.0.0.1:${PROXY_PORT}`
+  const proxyTarget = env.VITE_API_PROXY ?? `http://127.0.0.1:${PROXY_PORT}`
+
+  const apiProxy = { target: proxyTarget, changeOrigin: true }
 
   return {
     plugins: [react(), tailwindcss(), polymarketApiProxy()],
     server: {
       proxy: {
-        '/api/gamma': {
-          target: proxyTarget,
-          changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api\/gamma/, ''),
-        },
+        '/api/gamma': apiProxy,
+        '/api/clob': apiProxy,
+        '/api/data': apiProxy,
+        '/api/kalshi': apiProxy,
       },
     },
     preview: {
       proxy: {
-        '/api/gamma': {
-          target: proxyTarget,
-          changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/api\/gamma/, ''),
-        },
+        '/api/gamma': apiProxy,
+        '/api/clob': apiProxy,
+        '/api/data': apiProxy,
+        '/api/kalshi': apiProxy,
       },
     },
   }

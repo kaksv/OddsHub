@@ -4,19 +4,24 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "concurrently -k -n proxy,web -c green,blue \"node server/gamma-proxy.mjs\" \"vite\"",
+    "dev": "concurrently -k -n proxy,web -c green,blue \"node server/api-proxy.mjs\" \"vite\"",
     "dev:web": "vite",
-    "proxy": "node server/gamma-proxy.mjs",
+    "proxy": "node server/api-proxy.mjs",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "concurrently -k -n proxy,web \"node server/gamma-proxy.mjs\" \"vite preview\""
+    "preview": "concurrently -k -n proxy,web \"node server/api-proxy.mjs\" \"vite preview\""
   },
   "dependencies": {
+    "@polymarket/clob-client": "^5.8.1",
+    "@reown/appkit": "^1.8.20",
+    "@reown/appkit-adapter-wagmi": "^1.8.20",
     "@tanstack/react-query": "^5.101.0",
     "lucide-react": "^1.17.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
-    "react-router-dom": "^7.16.0"
+    "react-router-dom": "^7.16.0",
+    "viem": "^2.52.0",
+    "wagmi": "^3.6.16"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

@@ -1,5 +1,7 @@
 @import 'tailwindcss';
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
   --color-brand: #00a651;
   --color-brand-dark: #008c44;
@@ -16,5 +18,14 @@
   }
   body {
     @apply bg-white text-neutral-900 font-sans min-h-dvh;
+  }
+  html.dark body {
+    @apply bg-neutral-950 text-neutral-100;
+  }
+  html.dark {
+    --color-brand-light: #0d2d1a;
+    --color-border: #2a2a2a;
+    --color-muted: #9ca3af;
+    --color-surface: #171717;
   }
 }

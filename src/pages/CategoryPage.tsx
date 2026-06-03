@@ -1,8 +1,9 @@
 import { useMemo } from 'react'
 import { useParams } from 'react-router-dom'
-import { useEvents } from '../hooks/usePolymarket'
+import { useHubEvents } from '../hooks/useMarkets'
 import { EventList } from '../components/markets/EventList'
-import { CATEGORIES } from '../api/polymarket'
+import { FilterBar } from '../components/markets/FilterBar'
+import { CATEGORIES } from '../api/markets'
 
 export function CategoryPage() {
   const { slug = '' } = useParams<{ slug: string }>()
@@ -17,25 +18,26 @@ export function CategoryPage() {
     [slug],
   )
 
-  const { data, isLoading, isError, error, refetch, isFetching } = useEvents(query)
+  const { data, isLoading, isError, error, refetch, isFetching } = useHubEvents(query)
 
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-xl font-bold text-neutral-900">{label}</h1>
-        <p className="text-sm text-muted mt-0.5">
-          Active markets in this category
-        </p>
+        <h1 className="text-xl font-bold text-neutral-900 dark:text-neutral-100">{label}</h1>
+        <p className="text-sm text-muted mt-0.5">Polymarket markets in this category</p>
       </div>
-      <EventList
-        events={data}
-        isLoading={isLoading}
-        isError={isError}
-        errorMessage={error instanceof Error ? error.message : undefined}
-        onRetry={() => refetch()}
-        isRetrying={isFetching}
-        emptyTitle={`No markets in ${label}`}
-      />
+      <div className="grid lg:grid-cols-[1fr_240px] gap-4">
+        <EventList
+          events={data}
+          isLoading={isLoading}
+          isError={isError}
+          errorMessage={error instanceof Error ? error.message : undefined}
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+          emptyTitle={`No markets in ${label}`}
+        />
+        <FilterBar />
+      </div>
     </div>
   )
 }

@@ -1,50 +1,78 @@
 # OddsHub
 
-Prediction markets browser with a BetPawa-inspired UI. Read-only MVP powered by the [Polymarket Gamma API](https://docs.polymarket.com).
+Prediction markets hub with a BetPawa-inspired UI. Aggregates **Polymarket** and **Kalshi** with filters, live Polymarket prices, watchlist, and read-only portfolio.
 
-## Why a proxy?
+## Features
 
-Polymarket’s API does **not** send CORS headers. Browsers cannot call `gamma-api.polymarket.com` directly. OddsHub runs a **local proxy** that forwards requests server-side.
+- **Multi-source** — Polymarket + Kalshi (toggle in filters)
+- **Live prices** — Polymarket CLOB midpoints (green dot on odds, 30s refresh)
+- **Filters** — Min 24h volume, min liquidity, source toggles
+- **Home tabs** — Trending (24h vol) vs High volume (total vol)
+- **Watchlist** — Star markets, view on `/favorites`
+- **Wallet connect** — Polygon via Reown AppKit + wagmi (header button)
+- **Portfolio** — Auto-loads positions when wallet is connected
+- **In-app trading** — Polymarket limit orders from the bet slip (CLOB, EOA wallets)
+- **Dark mode** — Header toggle + `/settings`
+- **Demo bet slip** — Selections only; trade on source site
+
+## Stack
+
+Vite · React · TypeScript · Tailwind · TanStack Query
 
 ## Development
 
 ```bash
-cd OddsHub
 npm install
+cp .env.example .env.development   # then fill VITE_REOWN_PROJECT_ID
 npm run dev
 ```
 
-This starts **two processes**:
+1. **API proxy** — `127.0.0.1:8787` (auto-started)
+2. **Wallet** — free [Reown Cloud](https://dashboard.reown.com) project ID → `VITE_REOWN_PROJECT_ID` in `.env.development`
 
-1. **Gamma proxy** — `http://127.0.0.1:8787` (`server/gamma-proxy.mjs`)
-2. **Vite app** — usually `http://localhost:5173`
+**Do not set `VITE_API_PROXY` on Vercel production.**
 
-Open the Vite URL shown in the terminal.
+## Vercel deploy
 
-### Health check
+1. Push the `OddsHub` folder as the repo root (or set Root Directory to `OddsHub`).
+2. Framework: Vite — build `npm run build`, output `dist`.
+3. **No env vars required** for production — `/api/*` serverless routes in `/api` proxy to Polymarket/Kalshi.
+4. Do **not** copy `VITE_API_PROXY` from `.env.development` into Vercel.
 
-```bash
-curl http://127.0.0.1:8787/health
-# {"ok":true,"gamma":"https://gamma-api.polymarket.com","status":200}
-```
+## API routes (local + Vercel)
 
-### If markets still don’t load
+| Route | Upstream |
+|-------|----------|
+| `/api/gamma` | Polymarket Gamma |
+| `/api/clob` | Polymarket CLOB |
+| `/api/data` | Polymarket Data |
+| `/api/kalshi` | Kalshi Trade API |
 
-1. Stop all old terminals (`Ctrl+C`), then run `npm run dev` again.
-2. Confirm the proxy is up: `curl http://127.0.0.1:8787/health`
-3. If health fails, your network may block `gamma-api.polymarket.com` (VPN/firewall/DNS).
-4. Run proxy alone for logs: `npm run proxy`
-5. Run UI only (proxy must already be running): `npm run dev:web`
+## Wallet stack
 
-## Production build
+- **wagmi** — React hooks for Ethereum (no UI, no embedded wallets by itself)
+- **Reown AppKit** — connect modal (MetaMask, WalletConnect, Coinbase, etc.)
+- **Polygon only** — Polymarket chain
 
-```bash
-npm run build
-npm run preview   # also starts the gamma proxy
-```
+## Trading (Polymarket)
 
-For real deployment, host `server/gamma-proxy.mjs` (or equivalent) and route `/api/gamma` to it.
+1. Connect wallet (Polygon)
+2. Tap **Yes** / **No** on a Polymarket market
+3. Set stake per order in the bet slip → **Place order(s)**
+
+Uses `@polymarket/clob-client` with your wallet signature. API credentials are stored in **sessionStorage** only.
+
+**Supported:** MetaMask / EOA wallets on Polygon with USDC balance on Polymarket.
+
+**Not yet supported:** Polymarket proxy/Safe/deposit-wallet accounts — use polymarket.com for those.
+
+Kalshi selections link out to kalshi.com.
+
+## Coming soon
+
+- Additional data sources
+- Proxy/Safe wallet types for Polymarket
 
 ## Disclaimer
 
-OddsHub displays public data from Polymarket. Not affiliated with Polymarket or BetPawa. No real trading in this app.
+Not affiliated with Polymarket, Kalshi, or BetPawa. No real trading in OddsHub.

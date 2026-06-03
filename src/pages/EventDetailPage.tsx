@@ -1,17 +1,31 @@
 import { Link, useParams } from 'react-router-dom'
-import { ArrowLeft, ExternalLink } from 'lucide-react'
-import { useEvent } from '../hooks/usePolymarket'
+import { ArrowLeft, ExternalLink, Star } from 'lucide-react'
+import { useHubEvent, useLivePrices } from '../hooks/useMarkets'
 import { Spinner } from '../components/ui/Spinner'
 import { EmptyState } from '../components/ui/EmptyState'
 import { formatDate, formatVolume } from '../lib/format'
-import { getMarketPrices } from '../lib/prices'
+import { applyLivePrices } from '../api/clob'
 import { useSlip } from '../context/SlipContext'
+import { useWatchlist } from '../context/WatchlistContext'
 import { OddsButton } from '../components/markets/OddsButton'
+import { SourceBadge } from '../components/markets/SourceBadge'
+import { buildSlipSelection } from '../lib/trading/selection'
+import type { MarketSource } from '../types/market'
 
-export function EventDetailPage() {
-  const { slug } = useParams<{ slug: string }>()
-  const { data: event, isLoading, isError } = useEvent(slug)
+export function EventDetailPage({ legacyPolymarket }: { legacyPolymarket?: boolean }) {
+  const { source: sourceParam, slug } = useParams<{ source?: string; slug?: string }>()
+
+  const source: MarketSource = legacyPolymarket
+    ? 'polymarket'
+    : sourceParam === 'kalshi'
+      ? 'kalshi'
+      : 'polymarket'
+  const marketSlug = slug ?? ''
+
+  const { data: event, isLoading, isError } = useHubEvent(source, marketSlug)
+  const { data: livePrices = {} } = useLivePrices(event ? [event] : undefined)
   const { addSelection, selections } = useSlip()
+  const { isWatched, toggleWatch } = useWatchlist()
 
   if (isLoading) {
     return (
@@ -40,92 +54,114 @@ export function EventDetailPage() {
         Back to markets
       </Link>
 
-      <article className="rounded-lg border border-border overflow-hidden bg-white shadow-sm">
+      <article className="rounded-lg border border-border overflow-hidden bg-white dark:bg-neutral-900 shadow-sm">
         {event.image && (
-          <img
-            src={event.image}
-            alt=""
-            className="w-full h-40 sm:h-48 object-cover"
-          />
+          <img src={event.image} alt="" className="w-full h-40 sm:h-48 object-cover" />
         )}
         <div className="p-4 sm:p-5">
-          <h1 className="text-xl sm:text-2xl font-bold leading-tight">
+          <div className="flex items-center gap-2 mb-2">
+            <SourceBadge source={event.source} />
+          </div>
+          <h1 className="text-xl sm:text-2xl font-bold leading-tight dark:text-neutral-100">
             {event.title}
           </h1>
           {event.description && (
-            <p className="text-sm text-muted mt-3 leading-relaxed line-clamp-4">
+            <p className="text-sm text-muted mt-3 leading-relaxed line-clamp-6">
               {event.description}
             </p>
           )}
           <dl className="flex flex-wrap gap-4 mt-4 text-sm">
             <div>
               <dt className="text-muted text-xs uppercase font-semibold">24h Vol</dt>
-              <dd className="font-semibold">{formatVolume(event.volume24hr)}</dd>
+              <dd className="font-semibold dark:text-neutral-100">
+                {formatVolume(event.volume24hr)}
+              </dd>
             </div>
             <div>
               <dt className="text-muted text-xs uppercase font-semibold">Ends</dt>
-              <dd className="font-semibold">{formatDate(event.endDate)}</dd>
+              <dd className="font-semibold dark:text-neutral-100">{formatDate(event.endDate)}</dd>
             </div>
             <div>
               <dt className="text-muted text-xs uppercase font-semibold">Markets</dt>
-              <dd className="font-semibold">{event.markets.length}</dd>
+              <dd className="font-semibold dark:text-neutral-100">{event.markets.length}</dd>
             </div>
           </dl>
           <a
-            href={`https://polymarket.com/event/${event.slug}`}
+            href={event.markets[0]?.externalUrl ?? '#'}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 mt-4 text-sm font-semibold text-brand hover:underline"
           >
-            View on Polymarket
+            Trade on {event.source === 'kalshi' ? 'Kalshi' : 'Polymarket'}
             <ExternalLink className="size-4" />
           </a>
         </div>
       </article>
 
       <section>
-        <h2 className="font-bold text-lg mb-3">Outcomes</h2>
+        <h2 className="font-bold text-lg mb-3 dark:text-neutral-100">Outcomes</h2>
         <div className="space-y-3">
           {event.markets.map((market) => {
-            const prices = getMarketPrices(market)
+            const outcomes = applyLivePrices(
+              market.outcomes,
+              market.clobTokenIds,
+              livePrices,
+            )
             const label = market.groupItemTitle ?? market.question
             return (
               <div
                 key={market.id}
-                className="p-4 rounded-lg border border-border bg-white"
+                className="p-4 rounded-lg border border-border bg-white dark:bg-neutral-900"
               >
-                <p className="font-medium text-sm sm:text-base mb-3">{label}</p>
+                <div className="flex items-start justify-between gap-2 mb-3">
+                  <p className="font-medium text-sm sm:text-base dark:text-neutral-100">{label}</p>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      toggleWatch({
+                        source: event.source,
+                        eventSlug: event.slug,
+                        eventTitle: event.title,
+                        marketId: market.id,
+                      })
+                    }
+                    className="p-1 text-muted hover:text-amber-500 shrink-0"
+                  >
+                    <Star
+                      className={`size-5 ${isWatched(market.id) ? 'fill-amber-400 text-amber-400' : ''}`}
+                    />
+                  </button>
+                </div>
                 <div className="flex flex-wrap gap-2">
-                  {prices.map(({ outcome, price }) => (
+                  {outcomes.map(({ outcome, price, live }) => (
                     <OddsButton
                       key={outcome}
                       label={outcome}
                       price={price}
+                      live={live}
                       selected={selections.some(
-                        (s) =>
-                          s.marketId === market.id && s.outcome === outcome,
+                        (s) => s.marketId === market.id && s.outcome === outcome,
                       )}
-                      onClick={() =>
-                        addSelection({
-                          eventId: event.id,
-                          eventTitle: event.title,
-                          marketId: market.id,
-                          question: market.question,
-                          outcome,
-                          price,
-                        })
-                      }
+                      onClick={() => {
+                        const item = buildSlipSelection(event, market, outcome, price)
+                        if (item) addSelection(item)
+                      }}
                     />
                   ))}
                 </div>
                 <p className="text-xs text-muted mt-2">
-                  Vol {formatVolume(market.volumeNum)}
+                  Vol {formatVolume(market.volumeNum ?? market.volume24hr)}
                 </p>
               </div>
             )
           })}
         </div>
       </section>
+
+      <p className="text-xs text-muted border border-dashed border-border rounded-lg p-3">
+        Connect a Polygon wallet, add selections to the bet slip, and place limit orders on
+        Polymarket. Kalshi markets open on kalshi.com.
+      </p>
     </div>
   )
 }

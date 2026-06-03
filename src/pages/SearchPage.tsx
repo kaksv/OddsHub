@@ -1,7 +1,7 @@
 import { useSearchParams } from 'react-router-dom'
 import { useState, type FormEvent } from 'react'
 import { Search } from 'lucide-react'
-import { useSearch } from '../hooks/usePolymarket'
+import { useSearch } from '../hooks/useMarkets'
 import { EventList } from '../components/markets/EventList'
 
 export function SearchPage() {
@@ -10,7 +10,7 @@ export function SearchPage() {
   const [input, setInput] = useState(initial)
   const query = params.get('q') ?? ''
 
-  const { data, isLoading, isError } = useSearch(query)
+  const { data, isLoading, isError, error, refetch, isFetching } = useSearch(query)
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -19,7 +19,7 @@ export function SearchPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-bold">Search</h1>
+      <h1 className="text-xl font-bold dark:text-neutral-100">Search</h1>
       <form onSubmit={handleSubmit} className="relative max-w-lg">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-muted" />
         <input
@@ -27,7 +27,7 @@ export function SearchPage() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Events, politics, crypto..."
-          className="w-full h-11 pl-10 pr-4 rounded-lg border border-border text-sm focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand"
+          className="w-full h-11 pl-10 pr-4 rounded-lg border border-border bg-white dark:bg-neutral-900 dark:text-neutral-100 text-sm focus:outline-none focus:ring-2 focus:ring-brand/40 focus:border-brand"
           autoFocus
         />
       </form>
@@ -35,12 +35,15 @@ export function SearchPage() {
       {query.length >= 2 ? (
         <>
           <p className="text-sm text-muted">
-            Results for <strong className="text-neutral-800">&quot;{query}&quot;</strong>
+            Results for <strong className="text-neutral-800 dark:text-neutral-200">&quot;{query}&quot;</strong>
           </p>
           <EventList
             events={data}
             isLoading={isLoading}
             isError={isError}
+            errorMessage={error instanceof Error ? error.message : undefined}
+            onRetry={() => refetch()}
+            isRetrying={isFetching}
             emptyTitle="No results"
           />
         </>

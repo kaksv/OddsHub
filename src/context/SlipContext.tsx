@@ -6,7 +6,21 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import type { SlipSelection } from '../types/polymarket'
+import type { MarketSource } from '../types/market'
+
+export interface SlipSelection {
+  source: MarketSource
+  eventId: string
+  eventTitle: string
+  marketId: string
+  question: string
+  outcome: string
+  price: number
+  /** Polymarket CLOB conditional token id */
+  tokenId?: string
+  tickSize?: string
+  negRisk?: boolean
+}
 
 interface SlipContextValue {
   selections: SlipSelection[]

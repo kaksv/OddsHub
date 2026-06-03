@@ -1,6 +1,8 @@
 import { Link, useNavigate } from 'react-router-dom'
-import { Menu, Search, Ticket } from 'lucide-react'
+import { Menu, Moon, Search, Sun, Ticket } from 'lucide-react'
 import { useSlip } from '../../context/SlipContext'
+import { useTheme } from '../../context/ThemeContext'
+import { ConnectButton } from '../wallet/ConnectButton'
 import { useState, type FormEvent } from 'react'
 
 export function Header({
@@ -10,6 +12,7 @@ export function Header({
 }) {
   const navigate = useNavigate()
   const { count, setIsOpen } = useSlip()
+  const { theme, toggleTheme } = useTheme()
   const [q, setQ] = useState('')
 
   function handleSearch(e: FormEvent) {
@@ -53,6 +56,17 @@ export function Header({
         >
           <Search className="size-5" />
         </Link>
+
+        <ConnectButton />
+
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="p-2 rounded-md hover:bg-white/10"
+          aria-label="Toggle theme"
+        >
+          {theme === 'dark' ? <Sun className="size-5" /> : <Moon className="size-5" />}
+        </button>
 
         <button
           type="button"

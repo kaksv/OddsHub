@@ -24,6 +24,9 @@ export interface PolymarketMarket {
   icon?: string
   description?: string
   groupItemTitle?: string
+  clobTokenIds?: string
+  orderPriceMinTickSize?: number
+  negRisk?: boolean
   bestBid?: number
   bestAsk?: number
   lastTradePrice?: number
@@ -45,13 +48,4 @@ export interface PolymarketEvent {
   endDate?: string
   tags?: PolymarketTag[]
   markets: PolymarketMarket[]
-}
-
-export interface SlipSelection {
-  eventId: string
-  eventTitle: string
-  marketId: string
-  question: string
-  outcome: string
-  price: number
 }
