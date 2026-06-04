@@ -7,9 +7,6 @@ const headerActionClass =
   'flex items-center gap-1.5 bg-white/15 hover:bg-white/25 px-3 py-1.5 rounded-md text-sm font-semibold text-white transition-colors'
 
 export function ConnectButton() {
-  const { open } = useAppKit()
-  const { isConnected, shortAddress } = useWallet()
-
   if (!isWalletConfigured) {
     return (
       <span
@@ -20,6 +17,13 @@ export function ConnectButton() {
       </span>
     )
   }
+
+  return <ConnectButtonActive />
+}
+
+function ConnectButtonActive() {
+  const { open } = useAppKit()
+  const { isConnected, shortAddress } = useWallet()
 
   return (
     <button

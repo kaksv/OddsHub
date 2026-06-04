@@ -1,5 +1,23 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }]
+  "rewrites": [
+    {
+      "source": "/api/gamma/:path*",
+      "destination": "https://gamma-api.polymarket.com/:path*"
+    },
+    {
+      "source": "/api/clob/:path*",
+      "destination": "https://clob.polymarket.com/:path*"
+    },
+    {
+      "source": "/api/data/:path*",
+      "destination": "https://data-api.polymarket.com/:path*"
+    },
+    {
+      "source": "/api/kalshi/:path*",
+      "destination": "https://api.elections.kalshi.com/trade-api/v2/:path*"
+    },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
+  ]
 }
